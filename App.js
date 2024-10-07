@@ -6,7 +6,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider } from 'react-redux'; 
 import { useFonts } from 'expo-font';
 import profileScreen from './src/screens/profileScreen'; 
-
+import changeNameScreen from './src/screens/changeInfor/changeNameScreen';
+import changeMailScreen from './src/screens/changeInfor/changeEmail';
+import changePhoneNum from './src/screens/changeInfor/changePhonenum';
+import changePassScreen from './src/screens/changeInfor/changePassScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -25,6 +28,10 @@ export default function App() {
           <GestureHandlerRootView>
             <Stack.Navigator initialRouteName="profileScreen" > 
               <Stack.Screen name="profileScreen" component={profileScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="ChangeNameScreen" component={changeNameScreen} options={{headerShown: false}}/>
+               <Stack.Screen name="ChangeMailScreen" component={changeMailScreen} options={{headerShown: false}}/>
+               <Stack.Screen name="ChangePhoneNum" component={changePhoneNum} options={{headerShown: false}}/>
+               <Stack.Screen name="ChangePassScreen" component={changePassScreen} options={{headerShown: false}}/>
             </Stack.Navigator>
           </GestureHandlerRootView>
      

@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Image, StyleSheet, SafeAreaView, TouchableOpacity, Text, ScrollView } from 'react-native';
+import React ,  { useState }from 'react';
+import { View, Image, StyleSheet, SafeAreaView, TouchableOpacity, Text, ScrollView, Modal, TextInput } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { SvgXml } from 'react-native-svg';
+
 // import { LinearGradient } from 'react-native-linear-gradient';  
 import plusIcon from '../../assets/icons/plus-icon.js';
 import circleIcon from '../../assets/icons/circle-icon.js';
@@ -20,7 +21,11 @@ import signoutIcon from '../../assets/icons/signout-icon.js';
 import deleteIcon from '../../assets/icons/delete-icon.js';
 import nextIcon from '../../assets/icons/next-icon.js';
 
+
+
 const ProfileScreen = ({ navigation }) => {
+  
+
   return (
     <SafeAreaView style={styles.container}>
       <Animated.View
@@ -67,22 +72,22 @@ const ProfileScreen = ({ navigation }) => {
                 <Text style={styles.sectionTitle}>General</Text>
                 </View>
                 <View style={styles.box}>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("ChangePhoneNum")}>
                 <SvgXml style={styles.icon3} xml={phoneIcon}/>
                   <Text style={styles.optionText}>Change phone number</Text>
                   <SvgXml style={styles.iconNext} xml={nextIcon}/>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("ChangeMailScreen")}>
                 <SvgXml style={styles.icon3} xml={mailIcon}/>
                   <Text style={styles.optionText}>Change email address</Text>
                   <SvgXml style={styles.iconNext} xml={nextIcon}/>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option}  onPress={() => navigation.navigate("ChangePassScreen")}>
                   <SvgXml style={styles.icon3} xml={passIcon}/>
                   <Text style={styles.optionText}>Change password</Text>
                   <SvgXml style={styles.iconNext} xml={nextIcon}/>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("ChangeNameScreen")}>
                 <SvgXml style={styles.icon3} xml={signatureIcon}/>
                   <Text style={styles.optionText}>Change name</Text>
                   <SvgXml style={styles.iconNext} xml={nextIcon}/>
@@ -133,6 +138,29 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
               </View>
             </ScrollView>
+             {/* Modal for Changing Name */}
+          {/* <Modal
+            transparent={true}
+            visible={isnameModalVisible}
+            animationType="slide"
+            onRequestClose={() => setIsnameModalVisible(false)}
+          >
+            <View style={styles.modalBackground}>
+              <View style={styles.dialogContainer}>
+                <Text style={styles.modalTitle}>Edit your name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your name"
+                  placeholderTextColor="#838C82"
+                  value={name}
+                  onChangeText={setName}
+                />
+                <TouchableOpacity style={styles.saveButton} onPress={() => setIsnameModalVisible(false)}>
+                  <Text style={styles.saveButtonText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal> */}
           {/* </LinearGradient>
         </LinearGradient> */}
       </Animated.View>
@@ -215,7 +243,7 @@ const styles = StyleSheet.create({
   followContainer2: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: 200,
+    width: 'auto',
     marginTop: 10,
   },
   followText: {
@@ -264,5 +292,6 @@ space2:
     fontSize: 16,
     marginLeft:23,
   },
+
 });
 export default ProfileScreen;
