@@ -14,6 +14,7 @@ import ChangeNameScreen from './src/screens/changeInfor/changeNameScreen';
 import ChangeMailScreen from './src/screens/changeInfor/changeEmail';
 import ChangePhoneNum from './src/screens/changeInfor/changePhonenum';
 import ChangePassScreen from './src/screens/changeInfor/changePassScreen';
+import ChatListScreen from './src/screens/chatBot/chatListScreen';
 
 import botLeaf from './assets/icons/botLeaf-icon.js';
 import botHeart from './assets/icons/botHeart-icon.js';
@@ -47,7 +48,7 @@ const AnimatedIcon = React.memo(({ xml, focused, size, isActive }) => {
   );
 });
 
-// Dữ liệu cho các tab
+
 const tabScreens = [
   { name: 'Home', component: ChangeNameScreen, icon: botLeaf },
   { name: 'Search', component: ChangeMailScreen, icon: botSearch },
@@ -62,7 +63,7 @@ function BottomTabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, size }) => {
-          size = 20; // Kích thước của biểu tượng
+          size = 20;
           const tab = tabScreens.find(tab => tab.name === route.name);
           return <AnimatedIcon xml={tab.icon} focused={focused} size={size} isActive={focused} />;
         },
@@ -96,12 +97,13 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}> 
       <NavigationContainer>
         <StatusBar />
-        <Stack.Navigator initialRouteName="BottomTabs">
+        <Stack.Navigator initialRouteName="ChatListScreen">
           <Stack.Screen name="BottomTabs" component={BottomTabNavigator} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeNameScreen" component={ChangeNameScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeMailScreen" component={ChangeMailScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChangePhoneNum" component={ChangePhoneNum} options={{ headerShown: false }} />
           <Stack.Screen name="ChangePassScreen" component={ChangePassScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ChatListScreen" component={ChatListScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
