@@ -15,6 +15,9 @@ import ChangeMailScreen from './src/screens/changeInfor/changeEmail';
 import ChangePhoneNum from './src/screens/changeInfor/changePhonenum';
 import ChangePassScreen from './src/screens/changeInfor/changePassScreen';
 import ChatListScreen from './src/screens/chatBot/chatListScreen';
+import OthersProfileScreen from './src/screens/othersProfileScreen.js';
+
+
 
 import botLeaf from './assets/icons/botLeaf-icon.js';
 import botHeart from './assets/icons/botHeart-icon.js';
@@ -97,13 +100,14 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}> 
       <NavigationContainer>
         <StatusBar />
-        <Stack.Navigator initialRouteName="ChatListScreen">
+        <Stack.Navigator initialRouteName="OthersProfileScreen">
           <Stack.Screen name="BottomTabs" component={BottomTabNavigator} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeNameScreen" component={ChangeNameScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeMailScreen" component={ChangeMailScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChangePhoneNum" component={ChangePhoneNum} options={{ headerShown: false }} />
           <Stack.Screen name="ChangePassScreen" component={ChangePassScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChatListScreen" component={ChatListScreen} options={{ headerShown: false }} />
+          <Stack.Screen name= "OthersProfileScreen" component={OthersProfileScreen} options={{headerShown:false}}/>
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
