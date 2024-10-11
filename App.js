@@ -16,7 +16,7 @@ import ChangePhoneNum from './src/screens/changeInfor/changePhonenum';
 import ChangePassScreen from './src/screens/changeInfor/changePassScreen';
 import ChatListScreen from './src/screens/chatBot/chatListScreen';
 import OthersProfileScreen from './src/screens/othersProfileScreen.js';
-
+import SearchScreen from './src/screens/searchScreen.js'
 
 
 import botLeaf from './assets/icons/botLeaf-icon.js';
@@ -54,7 +54,7 @@ const AnimatedIcon = React.memo(({ xml, focused, size, isActive }) => {
 
 const tabScreens = [
   { name: 'Home', component: ChangeNameScreen, icon: botLeaf },
-  { name: 'Search', component: ChangeMailScreen, icon: botSearch },
+  { name: 'SearchScreen', component: SearchScreen, icon: botSearch },
   { name: 'Add', component: ChangePhoneNum, icon: botAdd },
   { name: 'Favorite', component: ChangePassScreen, icon: botHeart },
   { name: 'profileScreen', component: ProfileScreen, icon: botPerson },
@@ -100,7 +100,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}> 
       <NavigationContainer>
         <StatusBar />
-        <Stack.Navigator initialRouteName="OthersProfileScreen">
+        <Stack.Navigator initialRouteName="SearchScreen">
           <Stack.Screen name="BottomTabs" component={BottomTabNavigator} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeNameScreen" component={ChangeNameScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeMailScreen" component={ChangeMailScreen} options={{ headerShown: false }} />
@@ -108,6 +108,7 @@ export default function App() {
           <Stack.Screen name="ChangePassScreen" component={ChangePassScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChatListScreen" component={ChatListScreen} options={{ headerShown: false }} />
           <Stack.Screen name= "OthersProfileScreen" component={OthersProfileScreen} options={{headerShown:false}}/>
+          {/* <Stack.Screen name= "SearchScreen" component={SearchScreen} options={{headerShown:false}}/> */}
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
