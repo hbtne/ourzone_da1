@@ -14,10 +14,12 @@ import ChangeNameScreen from './src/screens/changeInfor/changeNameScreen';
 import ChangeMailScreen from './src/screens/changeInfor/changeEmail';
 import ChangePhoneNum from './src/screens/changeInfor/changePhonenum';
 import ChangePassScreen from './src/screens/changeInfor/changePassScreen';
-import ChatListScreen from './src/screens/chatBot/chatListScreen';
+import ChatListScreen from './src/screens/chat/chatListScreen';
 import OthersProfileScreen from './src/screens/othersProfileScreen.js';
-import SearchScreen from './src/screens/searchScreen.js'
-
+import SearchScreen from './src/screens/searchScreen.js';
+import FollowerScreen from './src/screens/followerScreen.js';
+import FollowingScreen from './src/screens/followingScreen.js'
+import NoticeScreen from './src/screens/noticeScreen.js';
 
 import botLeaf from './assets/icons/botLeaf-icon.js';
 import botHeart from './assets/icons/botHeart-icon.js';
@@ -56,7 +58,7 @@ const tabScreens = [
   { name: 'Home', component: ChangeNameScreen, icon: botLeaf },
   { name: 'SearchScreen', component: SearchScreen, icon: botSearch },
   { name: 'Add', component: ChangePhoneNum, icon: botAdd },
-  { name: 'Favorite', component: ChangePassScreen, icon: botHeart },
+  { name: 'NoticeScreen', component: NoticeScreen , icon: botHeart },
   { name: 'profileScreen', component: ProfileScreen, icon: botPerson },
 ];
 
@@ -100,7 +102,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}> 
       <NavigationContainer>
         <StatusBar />
-        <Stack.Navigator initialRouteName="SearchScreen">
+        <Stack.Navigator initialRouteName="NoticeScreen">
           <Stack.Screen name="BottomTabs" component={BottomTabNavigator} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeNameScreen" component={ChangeNameScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeMailScreen" component={ChangeMailScreen} options={{ headerShown: false }} />
@@ -108,6 +110,10 @@ export default function App() {
           <Stack.Screen name="ChangePassScreen" component={ChangePassScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChatListScreen" component={ChatListScreen} options={{ headerShown: false }} />
           <Stack.Screen name= "OthersProfileScreen" component={OthersProfileScreen} options={{headerShown:false}}/>
+          <Stack.Screen name= "FollowerScreen" component={FollowerScreen} options={{headerShown:false}}/>
+          <Stack.Screen name= "FollowingScreen" component={FollowingScreen} options={{headerShown:false}}/>
+
+
           {/* <Stack.Screen name= "SearchScreen" component={SearchScreen} options={{headerShown:false}}/> */}
         </Stack.Navigator>
       </NavigationContainer>

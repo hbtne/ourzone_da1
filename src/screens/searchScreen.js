@@ -64,7 +64,9 @@ const SearchScreen = () => {
                 style={styles.avatar}
               />
             ) : (
+              <View style={styles.avatar}>
               <Text style={styles.hashtagIcon}>#</Text>
+              </View>
             )}
          
             <Text style={styles.resultName}>{item.name}</Text>
@@ -149,7 +151,7 @@ color:'#738F81',
   },
   followed: {
     borderColor: 'white',
-    backgroundColor: '#557C56', 
+    backgroundColor: '#708F7B', 
   },
   iconSearch:
   {
@@ -159,19 +161,25 @@ color:'#738F81',
   resultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#708F7B',
+    backgroundColor:'rgba(115, 143, 129, 0.7)',
     padding: 15,
-    borderRadius: 15,
+    borderRadius: 35,
     marginBottom: 10,
   },
   avatar: {
     width: 50,
     height: 50,
-    borderRadius: 30,
+    borderRadius: 90,
     marginRight: 10,
+    backgroundColor:'#000000',
+    alignItems: 'center',
+borderColor:'#708F7B',
+borderWidth: 4,
+
+
   },
   hashtagIcon: {
-    fontSize: 24,
+    fontSize: 25,
     marginRight: 10,
     color: '#fff',
   },
