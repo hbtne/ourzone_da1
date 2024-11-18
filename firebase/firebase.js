@@ -1,8 +1,8 @@
-// frontend/firebase.js
 import { initializeApp } from "firebase/app";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeAuth, getReactNativePersistence } from "firebase/auth"; 
-import { getFirestore } from 'firebase/firestore'; 
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBWjwd22eMChAKhrf4SOJgYxzrzNNYqegM",
@@ -14,13 +14,14 @@ const firebaseConfig = {
   measurementId: "G-KYPNKHZP4C"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Khởi tạo Auth và Firestore
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
-const db = getFirestore(app); 
 
-export { app, auth, db }; // Xuất app, auth, db
+const db = getFirestore(app);
+
+const storage = getStorage(app);
+
+export { app, auth, db, storage };

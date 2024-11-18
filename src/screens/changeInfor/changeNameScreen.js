@@ -1,39 +1,68 @@
 import React, { useState } from 'react';
-import { ImageBackground, View, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
-import image from '../../../assets/images/background.png'; 
-import backIcon from '../../../assets/icons/back-icon';
+import { View, StyleSheet, TouchableOpacity, Text, TextInput, Alert } from 'react-native';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 import { SvgXml } from 'react-native-svg';
+import backIcon from '../../../assets/icons/back-icon';
 
 const ChangeNameScreen = ({ navigation }) => {
   const [name, setName] = useState('');
 
+  // Initialize Firebase Auth and Firestore
+  const auth = getAuth();
+  const db = getFirestore();
+
+  // Function to handle name change
+  const handleSaveName = async () => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      Alert.alert('Error', 'No user is logged in');
+      return;
+    }
+
+    if (!name.trim()) {
+      Alert.alert('Invalid Input', 'Please enter a valid name');
+      return;
+    }
+
+    try {
+     
+      const userDocRef = doc(db, 'users', user.uid);
+
+      await updateDoc(userDocRef, { name });
+
+      Alert.alert('Success', 'Name updated successfully');
+      navigation.navigate('Profile'); 
+    } catch (error) {
+      console.error('Error updating name:', error);
+      Alert.alert('Error', 'Failed to update name. Please try again.');
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* <ImageBackground source={image} resizeMode="cover" style={styles.image}>  */}
-        <View style={styles.borderContainer}>
-          <View style={styles.dialogContainer}>
-            <TouchableOpacity style={styles.backContainer} onPress={()=>{navigation.navigate('Profile')}}>
-              <SvgXml style={styles.iconBack} xml={backIcon}/>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Edit your name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Your name"
-              placeholderTextColor="#838C82"
-              value={name}
-              onChangeText={setName}
-            />
-            <TouchableOpacity
-              style={styles.saveButton}>
-              <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.borderContainer}>
+        <View style={styles.dialogContainer}>
+          <TouchableOpacity style={styles.backContainer} onPress={() => navigation.navigate('Profile')}>
+            <SvgXml style={styles.iconBack} xml={backIcon} />
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Edit your name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Your name"
+            placeholderTextColor="#838C82"
+            value={name}
+            onChangeText={setName}
+          />
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveName}>
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
         </View>
-      {/* </ImageBackground> */}
+      </View>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

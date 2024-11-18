@@ -1,10 +1,44 @@
 import React, { useState } from 'react';
-import { ImageBackground, View, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
+import { ImageBackground, View, StyleSheet, TouchableOpacity, Text, TextInput, Alert } from 'react-native';
 import backIcon from '../../../assets/icons/back-icon';
 import { SvgXml } from 'react-native-svg';
 import PhoneInput from 'react-native-phone-input';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
+
 const changePhoneNum = ({ navigation }) => {
     const [phoneNumber, setPhoneNumber] = useState('');
+
+  const auth = getAuth();
+  const db = getFirestore();
+
+  const handleSavePhone = async () => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      Alert.alert('Error', 'No user is logged in');
+      return;
+    }
+
+    if (!phoneNumber.trim()) {
+      Alert.alert('Invalid Input', 'Please enter a valid phone');
+      return;
+    }
+
+    try {
+     
+      const userDocRef = doc(db, 'users', user.uid);
+
+      await updateDoc(userDocRef, { phone});
+
+      Alert.alert('Success', 'Phone updated successfully');
+
+      navigation.navigate('Profile'); 
+    } catch (error) {
+      console.error('Error updating phone:', error);
+      Alert.alert('Error', 'Failed to update phone. Please try again.');
+    }
+  };
       return (
     <View style={styles.container}>
       {/* <ImageBackground source={image} resizeMode="cover" style={styles.image}>  */}
@@ -24,7 +58,7 @@ const changePhoneNum = ({ navigation }) => {
       />
     </View>
             <TouchableOpacity
-              style={styles.saveButton}>
+              style={styles.saveButton} onPress={handleSavePhone}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
           </View>

@@ -1,54 +1,114 @@
 import react, {useState} from "react";
-import { View, tyleSheet, TouchableOpacity, Text, TextInput, StyleSheet } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text, TextInput, Alert, ActivityIndicator } from "react-native";
 import { SvgXml } from 'react-native-svg';
 import backIcon from '../../../assets/icons/back-icon';
+import { getAuth, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 
-const changePassScreen = ({navigation}) => {
-    const [currentPassword,setCurrentPassword] = useState('');
-    const [newPassword,setNewPassword] = useState('');
-    const [confirmPassword,setConfirmPassword] = useState('');
-    return (
-  <View style={styles.container}>
-    {/* <ImageBackground source={image} resizeMode="cover" style={styles.image}>  */}
+
+const ChangePassScreen = ({ navigation }) => {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const auth = getAuth();
+  const db = getFirestore();
+  const currentUser = auth.currentUser;
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Error', 'New password and confirm password do not match.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      Alert.alert('Error', 'Password should be at least 6 characters.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+      await reauthenticateWithCredential(currentUser, credential);
+
+      await updatePassword(currentUser, newPassword);
+
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userDocRef, { password: newPassword });
+
+      Alert.alert('Success', 'Password updated successfully!');
+      navigation.navigate('Profile');
+    } catch (error) {
+      console.error('Error updating password:', error);
+      if (error.code === 'auth/wrong-password') {
+        Alert.alert('Error', 'The current password is incorrect.');
+      } else if (error.code === 'auth/too-many-requests') {
+        Alert.alert('Error', 'Too many attempts. Please try again later.');
+      } else {
+        Alert.alert('Error', 'Failed to update password. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
       <View style={styles.borderContainer}>
         <View style={styles.dialogContainer}>
-        <TouchableOpacity style={styles.backContainer} onPress={()=>{navigation.navigate('Profile')}}>
-            <SvgXml style={styles.iconBack} xml={backIcon}/>
+          <TouchableOpacity style={styles.backContainer} onPress={() => navigation.navigate('Profile')}>
+            <SvgXml style={styles.iconBack} xml={backIcon} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Edit your password</Text>
+
           <View style={styles.input}>
-          <TextInput
+            <TextInput
               placeholder="Enter your current password"
               placeholderTextColor="#838C82"
               value={currentPassword}
               onChangeText={setCurrentPassword}
+              secureTextEntry
             />
-  </View>
-  <View style={styles.input}>
-          <TextInput
+          </View>
+
+          <View style={styles.input}>
+            <TextInput
               placeholder="Enter your new password"
               placeholderTextColor="#838C82"
               value={newPassword}
               onChangeText={setNewPassword}
+              secureTextEntry
             />
-  </View>
-  <View style={styles.input}>
-          <TextInput
+          </View>
+
+          <View style={styles.input}>
+            <TextInput
               placeholder="Confirm your new password"
               placeholderTextColor="#838C82"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
+              secureTextEntry
             />
-  </View>
-          <TouchableOpacity
-            style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Save</Text>
+          </View>
+
+          <TouchableOpacity style={styles.saveButton} onPress={handleChangePassword} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
-    {/* </ImageBackground> */}
-  </View>
-);
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -124,4 +184,4 @@ backContainer:
 }
 });
 
-export default changePassScreen;
+export default ChangePassScreen;

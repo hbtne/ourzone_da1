@@ -10,10 +10,10 @@ const Stack = createStackNavigator();
 const ChangeInfoStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ChangeName" component={ChangeNameScreen} />
-      <Stack.Screen name="ChangeEmail" component={ChangeMailScreen} />
+      <Stack.Screen name="ChangeNameScreen" component={ChangeNameScreen} />
+      <Stack.Screen name="ChangeMailScreen" component={ChangeMailScreen} />
       <Stack.Screen name="ChangePhoneNum" component={ChangePhoneNum} />
-      <Stack.Screen name="ChangePassword" component={ChangePassScreen} />
+      <Stack.Screen name="ChangePassScreen" component={ChangePassScreen} />
     </Stack.Navigator>
   );
 };
