@@ -180,11 +180,13 @@ export const signup = (email, password, userData, method) => {
                 name: userData.name,
                 phone: userData.phone,
                 password:userData.password,
+                followersList:[],
+                followingsList:[],
                 follower: 0,
                 following:0,
                 avatar:'https://res.cloudinary.com/dh9ougddd/image/upload/uti8d5dnux7m0r5kss0m?_a=CAFAH2AfAAf0',
-                friends: [],
                 posts:[],
+
             });
 
             console.log("User data saved successfully!");

@@ -183,9 +183,13 @@ const ProfileScreen = () => {
             <Text style={styles.username}>{userName}</Text>
 
             <View style={styles.followContainer}>
+              <TouchableOpacity onPress={() => navigation.navigate('ProfileStack', { screen: 'FollowingScreen' })}>
               <Text style={styles.followText}>{following}</Text>
+              </TouchableOpacity>
               <View style={styles.space}></View>
+              <TouchableOpacity onPress={() => navigation.navigate('ProfileStack', { screen: 'FollowerScreen' })}>
               <Text style={styles.followText}>{follower}</Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.followContainer2}>
               <Text style={styles.followText}>Following</Text>

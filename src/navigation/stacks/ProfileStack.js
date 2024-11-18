@@ -12,8 +12,8 @@ const ProfileStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="OthersProfile" component={OthersProfileScreen} />
-      <Stack.Screen name="Follower" component={FollowerScreen} />
-      <Stack.Screen name="Following" component={FollowingScreen} />
+      <Stack.Screen name="FollowerScreen" component={FollowerScreen} />
+      <Stack.Screen name="FollowingScreen" component={FollowingScreen} />
     </Stack.Navigator>
   );
 };

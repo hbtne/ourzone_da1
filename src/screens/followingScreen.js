@@ -1,49 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState,  useEffect } from 'react';
 import { View, TextInput, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import ava from '../../assets/images/avatarcircle.png';
 import searchIcon from '../../assets/icons/search-icon';
 import moreIcon from'../../assets/icons/more-icon';
-const FollowingScreen = () => {
-  const allResults = [
-    { name: 'Tento', isFollowed: false },
-    { name: 'TM', isFollowed: false },
-  ];
 
-  const [searchResults, setSearchResults] = useState(allResults);
+import { db, auth } from '../../firebase/firebase';
+import { collection, getDocs, updateDoc, doc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
+
+const FollowingScreen = () => {
+  const [allResults, setAllResults] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const handleSearchChange = (text) => {
-    const searchTerm = text.toLowerCase();
-    setSearchTerm(searchTerm);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const usersList = usersSnapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            isFollowed: doc.data().followersList?.includes(auth.currentUser.uid) || false, 
+          }))
+          .filter((user) => user.isFollowed); 
+        setAllResults(usersList);
+        setSearchResults(usersList);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    fetchUsers();
+  }, []);
 
+  const handleSearchChange = (text) => {
+    setSearchTerm(text);
     const filteredResults = allResults.filter((result) =>
-      result.name.toLowerCase().includes(searchTerm)
+      result.name && result.name.toLowerCase().includes(text.toLowerCase())
     );
     setSearchResults(filteredResults);
   };
 
-  const toggleFollow = (index) => {
+  const handleFollow = async (index, userIdToFollow) => {
     const updatedResults = [...searchResults];
     updatedResults[index].isFollowed = !updatedResults[index].isFollowed;
     setSearchResults(updatedResults);
-  };
 
-  const removeResult = (index) => {
-    const updatedResults = searchResults.filter((_, i) => i !== index);
-    setSearchResults(updatedResults);
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      try {
+        const userDocRef = doc(db, 'users', userIdToFollow);
+        const currentUserDocRef = doc(db, 'users', currentUser.uid); 
+
+        if (updatedResults[index].isFollowed) {
+          await updateDoc(userDocRef, {
+            followersList: arrayUnion(currentUser.uid),
+            follower: increment(1),
+          });
+
+          await updateDoc(currentUserDocRef, {
+            followingsList: arrayUnion(userIdToFollow),
+            following: increment(1),
+          });
+        } else {
+          await updateDoc(userDocRef, {
+            followersList: arrayRemove(currentUser.uid),
+            follower: increment(-1),
+          });
+
+          await updateDoc(currentUserDocRef, {
+            followingsList: arrayRemove(userIdToFollow),
+            following: increment(-1),
+          });
+        }
+
+        console.log(
+          `User ${currentUser.uid} ${updatedResults[index].isFollowed ? 'followed' : 'unfollowed'} ${userIdToFollow}`
+        );
+      } catch (error) {
+        console.error('Error following/unfollowing user:', error);
+      }
+    }
   };
+  
 
   const openMenu = (user) => {
     setSelectedUser(user);
     setModalVisible(true);
   };
-
   const handleBlockUser = () => {
-    console.log(`Blocked user: ${selectedUser.name}`);
     setModalVisible(false);
+  };
+  const removeResult = (index) => {
+    const updatedResults = searchResults.filter((_, i) => i !== index);
+    setSearchResults(updatedResults);
   };
 
   const handleRemoveUser = () => {
@@ -53,44 +105,43 @@ const FollowingScreen = () => {
     setModalVisible(false);
   };
 
+  const renderItem = ({ item, index }) => (
+    <View style={styles.resultItem}>
+      <Image source={item.avatar ? { uri: item.avatar } : ava} style={styles.avatar} />
+      <Text style={styles.resultName}>{item.name}</Text>
+      <TouchableOpacity
+        style={[styles.button, item.isFollowed ? styles.followed : styles.follow]}
+        onPress={() => handleFollow(index, item.id)}
+      >
+        <Text style={styles.text}>{item.isFollowed ? 'Followed' : 'Follow'}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => openMenu(item)}>
+              <SvgXml style={styles.menuButton} xml={moreIcon}/>
+            </TouchableOpacity>
+    </View>
+  );
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.nameScreen}>Following</Text>
       <View style={styles.searchBar}>
         <TextInput
-          style={styles.searchBar1}
-          placeholder="Search..."
+          style={styles.searchInput}
+          placeholder="Search users..."
+          placeholderTextColor="#ccc"
           value={searchTerm}
           onChangeText={handleSearchChange}
         />
         <SvgXml style={styles.iconSearch} xml={searchIcon} />
       </View>
-
       <FlatList
         data={searchResults}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.resultItem}>
-            <Image source={ava} style={styles.avatar} />
-            <Text style={styles.resultName}>{item.name}</Text>
-
-            <TouchableOpacity
-              style={[styles.button, item.isFollowed ? styles.follow : styles.followed]}
-              onPress={() => toggleFollow(index)}>
-              <Text style={styles.text}>{item.isFollowed ? '     Follow' : '   Followed'}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => openMenu(item)}>
-              <SvgXml style={styles.menuButton} xml={moreIcon}/>
-            </TouchableOpacity>
-          </View>
-        )}
-        ListEmptyComponent={() => (
-          <Text style={styles.noResults}>No results found</Text>
-        )}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListEmptyComponent={() => <Text style={styles.noResults}>No users found</Text>}
       />
-
-      {modalVisible && (
+       {modalVisible && (
         <Modal
           transparent={true}
           animationType="slide"
@@ -114,6 +165,7 @@ const FollowingScreen = () => {
       )}
     </View>
   );
+  
 };
 
 const styles = StyleSheet.create({
