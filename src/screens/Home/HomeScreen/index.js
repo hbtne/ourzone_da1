@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, SafeAreaView, FlatList, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
 import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
-import SearchIcon from '../../../../assets/icons/SearchIcon';
 import ArrowDownIcon from '../../../../assets/icons/ArrowDownIcon';
 import Post from '../../../components/Post';
 import styles from './styles';
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentFilter, setCurrentFilter] = useState('all');
@@ -20,6 +18,7 @@ const HomeScreen = () => {
     { label: 'Following', value: 'friends' },
     { label: 'Me', value: 'me' },
   ]);
+  const [currentPostPlaying, setCurrentPostPlaying] = useState(null); // Track current post with sound
   const flatListRef = useRef(null);
   const auth = getAuth();
   const currentUserId = auth.currentUser?.uid || '';
@@ -84,6 +83,24 @@ const HomeScreen = () => {
     return posts;
   };
 
+  const onViewableItemsChanged = useRef(({ viewableItems, changed }) => {
+    const newVisiblePost = viewableItems[0]?.item.id;
+
+    // Stop sound of the previous post
+    if (currentPostPlaying && currentPostPlaying !== newVisiblePost) {
+      setCurrentPostPlaying(null); // Stop sound of the previous post
+    }
+
+    // Start sound for the new post
+    if (newVisiblePost) {
+      setCurrentPostPlaying(newVisiblePost); // Set new post as the current post
+    }
+  });
+
+  const viewabilityConfig = {
+    itemVisiblePercentThreshold: 50, // Adjust visibility threshold as needed
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
@@ -127,7 +144,7 @@ const HomeScreen = () => {
           <FlatList
             style={styles.postContainer}
             data={getFilteredPosts()}
-            renderItem={({ item }) => <Post item={item} />}
+            renderItem={({ item }) => <Post item={item} currentPostPlaying={currentPostPlaying} />}
             keyExtractor={(item) => item.id}
             pagingEnabled
             showsVerticalScrollIndicator={false}
@@ -136,6 +153,8 @@ const HomeScreen = () => {
             decelerationRate="fast"
             contentContainerStyle={{ paddingBottom: 80 }}
             ListEmptyComponent={<Text style={styles.emptyText}>No posts available</Text>}
+            onViewableItemsChanged={onViewableItemsChanged.current}
+            viewabilityConfig={viewabilityConfig}
           />
         )}
       </View>

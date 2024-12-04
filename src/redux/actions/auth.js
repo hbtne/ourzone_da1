@@ -119,7 +119,7 @@
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signInWithPhoneNumber, PhoneAuthProvider, RecaptchaVerifier } from 'firebase/auth';
 import { LOGIN_REQUEST, LOGIN_SUCCESS, LOGIN_FAILURE, SIGNUP_REQUEST, SIGNUP_SUCCESS, SIGNUP_FAILURE } from '../constants/authConstants';
 import { auth, db } from '../../../firebase/firebase'; 
-
+import ava from '../../../assets/images/avatarcircle.png';
 import { doc, setDoc } from 'firebase/firestore';
 // Thêm import cho các component khác của bạn nếu có
 
@@ -179,6 +179,14 @@ export const signup = (email, password, userData, method) => {
                 email: userData.email,
                 name: userData.name,
                 phone: userData.phone,
+                password:userData.password,
+                followersList:[],
+                followingsList:[],
+                follower: 0,
+                following:0,
+                avatar:'https://res.cloudinary.com/dh9ougddd/image/upload/uti8d5dnux7m0r5kss0m?_a=CAFAH2AfAAf0',
+                posts:[],
+
             });
 
             console.log("User data saved successfully!");

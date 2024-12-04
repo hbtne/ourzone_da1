@@ -12,34 +12,34 @@ import SendIcon from '../../../assets/icons/SendIcon';
 import MoreIcon from '../../../assets/icons/MoreIcon';
 import styles from './styles';
 
-const Post = ({ item }) => {
+const Post = ({ item, navigation }) => {
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [likes, setLikes] = useState(item.likes || 0);
   const [sound, setSound] = useState();
   const [videoRef, setVideoRef] = useState(null);
-  const [isSoundError, setIsSoundError] = useState(false); // Kiểm tra lỗi âm thanh
-  const [isVideoPaused, setIsVideoPaused] = useState(false); // Kiểm tra trạng thái dừng video
+  const [isSoundError, setIsSoundError] = useState(false);
+  const [isVideoPaused, setIsVideoPaused] = useState(false);
 
   useEffect(() => {
-    // Kiểm tra nếu có link nhạc và cố gắng tải âm thanh
+    // Load sound if available
     if (item.music && !isSoundError) {
       const loadSound = async () => {
         try {
           const { sound: playbackObject } = await Audio.Sound.createAsync(
             { uri: item.music },
-            { shouldPlay: true, isLooping: true }
+            { shouldPlay: false, isLooping: true }
           );
           setSound(playbackObject);
         } catch (error) {
           console.error("Error loading sound: ", error);
-          setIsSoundError(true); // Đánh dấu lỗi khi không thể tải nhạc
+          setIsSoundError(true);
         }
       };
 
       loadSound();
 
       return () => {
-        // Hủy âm thanh khi component unmount
+        // Cleanup sound on unmount or when item.music changes
         if (sound) {
           sound.unloadAsync();
         }
@@ -47,10 +47,33 @@ const Post = ({ item }) => {
     }
   }, [item.music, isSoundError]);
 
+  // Handle stopping sound on screen navigation or interaction
+  useEffect(() => {
+    if (!navigation) return;
+  
+    const focusListener = navigation.addListener('focus', () => {
+      if (sound) {
+        sound.stopAsync();
+      }
+    });
+  
+    const blurListener = navigation.addListener('blur', () => {
+      if (sound) {
+        sound.stopAsync();
+      }
+    });
+  
+    return () => {
+      focusListener();
+      blurListener();
+    };
+  }, [navigation, sound]);
+  
   const toggleBottomSheet = () => setBottomSheetVisible(!isBottomSheetVisible);
 
   const handleLike = (liked) => {
     setLikes((prevLikes) => (liked ? prevLikes + 1 : prevLikes - 1));
+    updateLikesInFirebase(item.id, liked ? likes + 1 : likes - 1);
   };
 
   const handleShare = async () => {
@@ -79,10 +102,21 @@ const Post = ({ item }) => {
     if (status.didJustFinish || !status.isPlaying) {
       setIsVideoPaused(true);
       if (sound) {
-        sound.stopAsync(); // Dừng âm thanh khi video kết thúc hoặc dừng
+        sound.stopAsync(); // Dừng nhạc khi video dừng hoặc tạm dừng
       }
+    } else if (status.isPlaying && sound) {
+      sound.playAsync(); // Bắt đầu phát nhạc khi video phát
     }
   };
+  
+  // Thêm logic để tạm dừng video và nhạc khi video bị tạm dừng
+  const handlePause = () => {
+    setIsVideoPaused(true);
+    if (sound) {
+      sound.stopAsync(); // Dừng nhạc khi video bị tạm dừng
+    }
+  };
+  
 
   return (
     <View style={styles.postContainer}>
@@ -95,12 +129,9 @@ const Post = ({ item }) => {
           shouldPlay={true}
           isLooping
           useNativeControls
-          isMuted={isSoundError} // Nếu gặp lỗi âm thanh, tắt tiếng video
-          onPlaybackStatusUpdate={handleVideoStatusUpdate} // Theo dõi trạng thái video
-          onPause={() => {
-            setIsVideoPaused(true); // Khi video tạm dừng
-            if (sound) sound.stopAsync(); // Dừng âm thanh khi video dừng
-          }}
+          isMuted={isSoundError}
+          onPlaybackStatusUpdate={handleVideoStatusUpdate}
+  onPause={handlePause} 
         />
       ) : (
         <Text style={styles.errorText}>Video is unavailable</Text>

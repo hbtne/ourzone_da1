@@ -1,7 +1,7 @@
-import React from 'react';
-import Svg, { Path } from 'react-native-svg';
+;import React from 'react';
+import Svg, { Path, Line } from 'react-native-svg';
 
-const HidePasswordIcon = ({ width = 19, height = 13, color = 'white', strokeColor = '#828282' }) => (
+const HidePasswordIcon = ({ width = 19, height = 13, color = 'none', strokeColor = '#828282' ,isHidden}) => (
   <Svg width={width} height={height} viewBox="0 0 19 13" fill="none">
     <Path
       d="M1 7.45837C4.3 -0.208292 14.2 -0.208292 17.5 7.45837H1Z"
@@ -18,7 +18,21 @@ const HidePasswordIcon = ({ width = 19, height = 13, color = 'white', strokeColo
       strokeLinecap="round"
       strokeLinejoin="round"
     />
+     {/* If password is hidden, draw the diagonal line */}
+     {isHidden && (
+      <Line
+        x1="1"
+        y1="1"
+        x2="18"
+        y2="12"
+        stroke={strokeColor}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    )}
   </Svg>
+
 );
 
 export default HidePasswordIcon;
+

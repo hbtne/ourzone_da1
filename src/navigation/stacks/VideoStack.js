@@ -6,7 +6,7 @@ import AddCaptionScreen from '../../screens/Video/AddCaptionScreen/index';
 
 const Stack = createStackNavigator();
 
-const ProfileStack = () => {
+const VideoStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Recording" component={RecordingScreen} />
@@ -17,4 +17,4 @@ const ProfileStack = () => {
   );
 };
 
-export default ProfileStack;
+export default VideoStack;
