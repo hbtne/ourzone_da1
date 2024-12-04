@@ -1,58 +1,145 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, SafeAreaView, FlatList, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
+import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import SearchIcon from '../../../../assets/icons/SearchIcon';
+import ArrowDownIcon from '../../../../assets/icons/ArrowDownIcon';
+import Post from '../../../components/Post';
 import styles from './styles';
 
-import CommentIcon from '../../../../assets/icons/CommentIcon'; 
-import SendIcon from '../../../../assets/icons/SendIcon'; 
-import SearchIcon from '../../../../assets/icons/SearchIcon'; 
-import ArrowDownIcon from '../../../../assets/icons/ArrowDownIcon';
-import MoreIcon from '../../../../assets/icons/MoreIcon';
-import FollowButton from '../../../components/FollowButton/index';
-import HeartButton from '../../../components/HeartButton/index';
-import MusicBar from '../../../components/MusicBar/index';
-import CommentBottomSheet from '../../../components/CommentBottomSheet';
-
 const HomeScreen = () => {
-  const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentFilter, setCurrentFilter] = useState('all');
+  const [following, setFollowing] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([
+    { label: 'All', value: 'all' },
+    { label: 'Following', value: 'friends' },
+    { label: 'Me', value: 'me' },
+  ]);
+  const flatListRef = useRef(null);
+  const auth = getAuth();
+  const currentUserId = auth.currentUser?.uid || '';
 
-  const toggleBottomSheet = () => {
-    setBottomSheetVisible(!isBottomSheetVisible);
+  // Fetch posts and following data
+  const fetchPostsAndFollowing = async () => {
+    try {
+      const db = getFirestore();
+
+      // Fetch posts
+      const postsCollection = collection(db, 'posts');
+      const postsSnapshot = await getDocs(postsCollection);
+      const postsList = postsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // Enrich posts with user data
+      const enrichedPosts = await Promise.all(
+        postsList.map(async (post) => {
+          const userDoc = doc(db, 'users', post.userId);
+          const userSnapshot = await getDoc(userDoc);
+          const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+          return {
+            ...post,
+            name: userData.name || 'Unknown',
+            avatar: userData.avatar || '',
+          };
+        })
+      );
+      setPosts(enrichedPosts);
+
+      // Fetch user's following list
+      const userDoc = doc(db, 'users', currentUserId);
+      const userSnapshot = await getDoc(userDoc);
+      if (userSnapshot.exists()) {
+        const userData = userSnapshot.data();
+        setFollowing(userData.followingsList || []);
+      }
+    } catch (error) {
+      console.error('Error fetching posts and users: ', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Trigger fetch on every screen focus
+  useFocusEffect(
+    React.useCallback(() => {
+      setIsLoading(true); // Set loading before fetching
+      fetchPostsAndFollowing(); // Fetch data when screen is focused
+    }, [])
+  );
+
+  const getFilteredPosts = () => {
+    if (currentFilter === 'me') {
+      return posts.filter((post) => post.userId === currentUserId);
+    }
+    if (currentFilter === 'friends') {
+      return posts.filter((post) => following.includes(post.userId));
+    }
+    return posts;
   };
 
   return (
-    <View style={styles.postContainer}>
-
-      <View style={styles.header}>
-        <View style={styles.leftHeader}>
-          <Text style={styles.title}>Reels </Text>
-          <ArrowDownIcon width={24} height={24} color="#fff" />
-        </View>
-        <SearchIcon width={30} height={30} color="#fff" />
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.interactionButtons}>
-          <View style={styles.buttonContainer}>
-            <HeartButton />
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.leftHeader}>
+            <Text style={styles.title}>Reel</Text>
+            <TouchableOpacity
+              style={styles.dropdownContainer}
+              onPress={() => setOpen(!open)}
+            >
+              <Text style={styles.dropdownTextStyle}>
+                {items.find((item) => item.value === currentFilter)?.label || 'Filter'}
+              </Text>
+              <ArrowDownIcon style={styles.dropdownArrowStyle} />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={toggleBottomSheet} style={styles.buttonContainer}>
-            <CommentIcon width={30} height={30} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.buttonContainer}>
-            <SendIcon width={30} height={30} color="#fff" />
-          </View>
+
+          {/* Dropdown Menu */}
+          {open && (
+            <View style={styles.dropdownStyle}>
+              {items.map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setCurrentFilter(item.value);
+                    setOpen(false); // Close dropdown after selection
+                  }}
+                >
+                  <Text style={styles.dropdownTextStyle}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
+
+        {/* Post List */}
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#fff" style={styles.loader} />
+        ) : (
+          <FlatList
+            style={styles.postContainer}
+            data={getFilteredPosts()}
+            renderItem={({ item }) => <Post item={item} />}
+            keyExtractor={(item) => item.id}
+            pagingEnabled
+            showsVerticalScrollIndicator={false}
+            ref={flatListRef}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            contentContainerStyle={{ paddingBottom: 80 }}
+            ListEmptyComponent={<Text style={styles.emptyText}>No posts available</Text>}
+          />
+        )}
       </View>
-
-      <FollowButton />
-
-      <View style={styles.footer}>
-        <MusicBar songName="Tên bài hát đang phát" />
-        <MoreIcon width={24} height={24} color="#fff" />
-      </View>
-
-      <CommentBottomSheet isVisible={isBottomSheetVisible} onClose={toggleBottomSheet} />
-    </View>
+    </SafeAreaView>
   );
 };
 

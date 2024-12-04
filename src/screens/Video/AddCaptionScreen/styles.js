@@ -53,6 +53,13 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         marginLeft:30,
     },
+    videoPlayer: {
+        width: '100%',
+        height: '100%',      // Video sẽ chiếm toàn bộ màn hình
+        position: 'absolute', // Đặt video lên đầu trang
+        top: 0,
+        left: 0,
+      },
 });
 
 export default styles;

@@ -17,7 +17,7 @@ const FollowButton = () => {
           style={[styles.button, isFollowed && styles.followedButton]}
           onPress={handlePress}
         >
-          <Text style={[styles.buttonText, isFollowed && styles.followedText]}>
+          <Text numberOfLines={1}  style={[styles.buttonText, isFollowed && styles.followedText]}>
             {isFollowed ? 'Followed' : 'Follow'}
           </Text>
         </TouchableOpacity>

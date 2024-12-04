@@ -54,14 +54,10 @@ const styles = StyleSheet.create({
         marginLeft: 10, 
     },
     forgotPassword: {
-        position: 'absolute', 
         fontFamily: 'Montserrat-Regular', 
-        left: 200, 
-        top: 60,
+        left: 60, 
         fontSize: 14,
-        lineHeight: 17,
         color: '#FFFFFF',
-        marginLeft: 10, 
     },
     input: {
         width: 330, 
@@ -75,15 +71,30 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 5, 
         fontFamily: 'Montserrat-Regular', 
-        color: '#FFFFFF', 
+        color: '#FFFFFF',
     },
-   
+    passwordContainer: {
+        passwordContainer: {
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            width: 330,
+            height: 42,
+            borderWidth: 0.6, 
+            borderColor: '#FFFFFF',
+            borderRadius: 21, 
+            marginBottom: 10,
+            paddingHorizontal: 10, 
+            backgroundColor: 'transparent', 
+        },
+        
+    },
     buttonCancel: {
         width: 100,
         height: 42,
         borderRadius: 21,
         borderWidth: 1, 
-        borderColor: '#FFFFFF', // Màu của border
+        borderColor: '#FFFFFF', 
         justifyContent: 'center',
         alignItems: 'center',
         marginHorizontal: 10,
@@ -132,6 +143,20 @@ const styles = StyleSheet.create({
         color: '#738F81',
         marginLeft: 10, 
     },
+    eyeIcon: {
+        height: '100%', 
+        width: 40,
+        marginLeft: 300, 
+        marginTop: 3,
+
+    },
+    
+    checkboxTick: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        
+    },
+    
    
 });
 

@@ -2,7 +2,9 @@ import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
+    
     alignItems: 'center',
+    paddingStart:10,
     justifyContent: 'center',
     flex: 1,
     backgroundColor: 'transparent',
@@ -16,6 +18,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
+    width: 100,
     borderWidth: 1,
     borderColor: 'white',
     borderRadius: 20,
@@ -29,6 +32,8 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     color: 'white',
+    fontFamily: 'Montserrat-Regular',
+
   },
   followedText: {
     color: 'black', // Màu chữ khi đã follow

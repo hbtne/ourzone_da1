@@ -5,17 +5,23 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#51645A', // Màu nền xanh nhạt
+    backgroundColor: '#51645A', 
     padding: 10,
     borderRadius: 25,
-    overflow: 'hidden', // Đảm bảo chữ không bị tràn ra ngoài
+    overflow: 'hidden', 
+    whiteSpace: 'nowrap', 
   },
   iconContainer: {
     marginRight: 10,
   },
+
   songName: {
     fontSize: 16,
-    color: '#000', // Màu chữ
+    color: '#000',
+    marginLeft: 150,
+
+    fontFamily: 'Montserrat-Regular',
+
   },
 });
 

@@ -12,6 +12,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    zIndex: 2,
   },
   content: {
     flex: 1,
