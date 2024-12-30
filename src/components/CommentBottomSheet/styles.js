@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   scrollContainer: {
-    flex: 1,
+    height: '100%', 
   },
   scrollContent: {
     paddingBottom: 10, 
