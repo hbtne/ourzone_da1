@@ -24,6 +24,7 @@ import reportIcon from '../../assets/icons/report-icon.js';
 import signoutIcon from '../../assets/icons/signout-icon.js';
 import deleteIcon from '../../assets/icons/delete-icon.js';
 import nextIcon from '../../assets/icons/next-icon.js';
+import axios from 'axios';
 
 const ProfileScreen = () => {
   const [userName, setUserName] = useState('');
@@ -34,6 +35,66 @@ const ProfileScreen = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const navigation = useNavigation();
 
+  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dibmnb2rp/image/upload'; // Thay 'dibmnb2rp' bằng cloudName của bạn
+const CLOUDINARY_UPLOAD_PRESET = 'avatar_upload_preset'; // Tên preset (tạo trên Cloudinary)
+
+// Hàm chọn và cắt ảnh
+ const handleImagePicker = async () => {
+  const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (!permissionResult.granted) {
+    Alert.alert('Permission required', 'Permission to access camera roll is required!');
+    return;
+  }
+
+  const pickerResult = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true, // Cho phép người dùng cắt ảnh
+    aspect: [4, 4], // Tỷ lệ cắt ảnh
+    quality: 1, // Chất lượng ảnh
+  });
+
+  if (!pickerResult.canceled) {
+    const imageUri = pickerResult.assets[0].uri; // Đường dẫn ảnh đã chọn
+    await uploadImageToCloudinary(imageUri); // Tiến hành upload ảnh lên Cloudinary
+  }
+};
+
+// Hàm upload ảnh lên Cloudinary
+const uploadImageToCloudinary = async (imageUri) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', { uri: imageUri, type: 'image/jpeg', name: 'avatar.jpg' }); // Định dạng ảnh
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET); // Preset để upload
+
+    const response = await axios.post(CLOUDINARY_URL, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    if (response.data.secure_url) {
+      const downloadUrl = response.data.secure_url; // Link ảnh từ Cloudinary
+      await updateUserAvatar(downloadUrl); // Cập nhật link này vào Firebase
+    }
+  } catch (error) {
+    console.error('Error uploading to Cloudinary:', error);
+    Alert.alert('Upload Error', 'Failed to upload image to Cloudinary. Please try again.');
+  }
+};
+
+// Hàm cập nhật avatar trong Firestore Database
+const updateUserAvatar = async (url) => {
+  try {
+    const user = auth.currentUser; // Lấy thông tin người dùng hiện tại
+    if (!user) throw new Error('No user is logged in');
+
+    const userDocRef = doc(db, 'users', user.uid); // Tham chiếu đến tài liệu người dùng
+    await updateDoc(userDocRef, { avatar: url }); // Cập nhật trường `avatar`
+    Alert.alert('Success', 'Avatar updated successfully!');
+  } catch (error) {
+    console.error('Error updating user avatar:', error);
+    Alert.alert('Update Error', 'Failed to update avatar. Please try again.');
+  }
+};
   const fetchUserData = async () => {
     try {
       const user = auth.currentUser;
@@ -60,56 +121,6 @@ const ProfileScreen = () => {
     }, [])
   );
 
-  const handleImagePicker = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permission required', 'Permission to access camera roll is required!');
-      return;
-    }
-
-    const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-
-    if (!pickerResult.canceled) {
-      const imageUri = pickerResult.assets[0].uri;
-      setSelectedImage(imageUri);
-      await uploadImageToFirebase(imageUri);
-    }
-  };
-
-  const uploadImageToFirebase = async (uri) => {
-    setLoading(true);
-    try {
-      const user = auth.currentUser;
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const imageRef = ref(storage, `avatars/${user.uid}/${Date.now()}`);
-      await uploadBytes(imageRef, blob);
-      const downloadUrl = await getDownloadURL(imageRef);
-      await updateUserAvatar(downloadUrl);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      Alert.alert("Upload Error", "Failed to upload image. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateUserAvatar = async (url) => {
-    try {
-      const userDocRef = doc(db, 'users', auth.currentUser.uid);
-      await updateDoc(userDocRef, { avatar: url });
-      setAvatar(url);
-      fetchUserData();
-    } catch (error) {
-      console.error("Error updating user avatar:", error);
-      Alert.alert("Update Error", "Failed to update user avatar. Please try again.");
-    }
-  };
   
 
   const handleSignOut = async () => {
