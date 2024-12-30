@@ -7,7 +7,7 @@ import { useFonts } from 'expo-font';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit'; 
 import rootReducer from './src/redux/reducers';
-import { app, auth } from './frontend/firebase'; // Import app và auth
+import { app, auth } from './firebase/firebase'; 
 import { Linking } from 'react-native';
 import { useEffect } from 'react';
 const store = configureStore({

@@ -1,77 +1,113 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, SafeAreaView, FlatList, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import React, { useState, useRef, useCallback } from 'react';
+import {
+  View,
+  SafeAreaView,
+  FlatList,
+  Text,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
+import {
+  getFirestore,
+  collection,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import { useFocusEffect } from '@react-navigation/native';
 import ArrowDownIcon from '../../../../assets/icons/ArrowDownIcon';
 import Post from '../../../components/Post';
 import styles from './styles';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
   const [posts, setPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentFilter, setCurrentFilter] = useState('all');
   const [following, setFollowing] = useState([]);
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([
-    { label: 'All', value: 'all' },
-    { label: 'Following', value: 'friends' },
-    { label: 'Me', value: 'me' },
-  ]);
-  const [currentPostPlaying, setCurrentPostPlaying] = useState(null); // Track current post with sound
+  const [lastVisible, setLastVisible] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const flatListRef = useRef(null);
+
   const auth = getAuth();
   const currentUserId = auth.currentUser?.uid || '';
 
-  // Fetch posts and following data
-  const fetchPostsAndFollowing = async () => {
+  const items = [
+    { label: 'All', value: 'all' },
+    { label: 'Following', value: 'friends' },
+    { label: 'Me', value: 'me' },
+  ];
+
+  const fetchFollowingList = async () => {
+    const db = getFirestore();
+    const userDoc = doc(db, 'users', currentUserId);
+    const userSnapshot = await getDoc(userDoc);
+    if (userSnapshot.exists()) {
+      const userData = userSnapshot.data();
+      setFollowing(userData.followingsList || []);
+    }
+  };
+
+  const fetchPosts = async (lastVisible) => {
+    const db = getFirestore();
+    const postsCollection = collection(db, 'posts');
+    const postsQuery = lastVisible
+      ? query(
+          postsCollection,
+          orderBy('createdAt', 'desc'),
+          startAfter(lastVisible),
+          limit(1)  
+        )
+      : query(postsCollection, orderBy('createdAt', 'desc'), limit(1));
+  
+    const postsSnapshot = await getDocs(postsQuery);
+    const postsList = postsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setLastVisible(postsSnapshot.docs[postsSnapshot.docs.length - 1]);
+    setHasMore(postsSnapshot.docs.length > 0);
+    return postsList;
+  };
+  
+
+  const enrichPostsWithUserData = async (postsList) => {
+    const db = getFirestore();
+    return Promise.all(
+      postsList.map(async (post) => {
+        const userDoc = doc(db, 'users', post.userId);
+        const userSnapshot = await getDoc(userDoc);
+        const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+        return {
+          ...post,
+          name: userData.name || 'Unknown',
+          avatar: userData.avatar || '',
+        };
+      })
+    );
+  };
+
+  const loadPosts = async (lastVisible = null) => {
     try {
-      const db = getFirestore();
-
-      // Fetch posts
-      const postsCollection = collection(db, 'posts');
-      const postsSnapshot = await getDocs(postsCollection);
-      const postsList = postsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      // Enrich posts with user data
-      const enrichedPosts = await Promise.all(
-        postsList.map(async (post) => {
-          const userDoc = doc(db, 'users', post.userId);
-          const userSnapshot = await getDoc(userDoc);
-          const userData = userSnapshot.exists() ? userSnapshot.data() : {};
-          return {
-            ...post,
-            name: userData.name || 'Unknown',
-            avatar: userData.avatar || '',
-          };
-        })
+      setIsLoading(true);
+      const postsList = await fetchPosts(lastVisible);
+      const enrichedPosts = await enrichPostsWithUserData(postsList);
+      setPosts((prevPosts) =>
+        lastVisible ? [...prevPosts, ...enrichedPosts] : enrichedPosts
       );
-      setPosts(enrichedPosts);
-
-      // Fetch user's following list
-      const userDoc = doc(db, 'users', currentUserId);
-      const userSnapshot = await getDoc(userDoc);
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.data();
-        setFollowing(userData.followingsList || []);
-      }
     } catch (error) {
-      console.error('Error fetching posts and users: ', error);
+      console.error('Error loading posts:', error);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Trigger fetch on every screen focus
-  useFocusEffect(
-    React.useCallback(() => {
-      setIsLoading(true); // Set loading before fetching
-      fetchPostsAndFollowing(); // Fetch data when screen is focused
-    }, [])
-  );
 
   const getFilteredPosts = () => {
     if (currentFilter === 'me') {
@@ -83,24 +119,35 @@ const HomeScreen = ({ navigation }) => {
     return posts;
   };
 
-  const onViewableItemsChanged = useRef(({ viewableItems, changed }) => {
-    const newVisiblePost = viewableItems[0]?.item.id;
+  useFocusEffect(
+    React.useCallback(() => {
+      setPosts([]);
+      setLastVisible(null);
+      setHasMore(true);
+      loadPosts();
+      fetchFollowingList();
+    }, [])
+  );
 
-    // Stop sound of the previous post
-    if (currentPostPlaying && currentPostPlaying !== newVisiblePost) {
-      setCurrentPostPlaying(null); // Stop sound of the previous post
+
+  const onEndReachedHandler = () => {
+    if (hasMore && !isLoading) {
+      loadPosts(lastVisible);  
     }
-
-    // Start sound for the new post
-    if (newVisiblePost) {
-      setCurrentPostPlaying(newVisiblePost); // Set new post as the current post
-    }
-  });
-
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50, // Adjust visibility threshold as needed
   };
-
+  
+  const onViewableItemsChanged = useCallback(({ viewableItems }) => {
+    if (viewableItems.length > 0) {
+      const index = viewableItems[0]?.index || 0;
+      setCurrentIndex(index);  
+    }
+  }, []);
+  
+  
+  const viewabilityConfig = {
+    itemVisiblePercentThreshold: 80,
+  };
+  
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
@@ -112,13 +159,12 @@ const HomeScreen = ({ navigation }) => {
               onPress={() => setOpen(!open)}
             >
               <Text style={styles.dropdownTextStyle}>
-                {items.find((item) => item.value === currentFilter)?.label || 'Filter'}
+                {items.find((item) => item.value === currentFilter)?.label ||
+                  'Filter'}
               </Text>
               <ArrowDownIcon style={styles.dropdownArrowStyle} />
             </TouchableOpacity>
           </View>
-
-          {/* Dropdown Menu */}
           {open && (
             <View style={styles.dropdownStyle}>
               {items.map((item) => (
@@ -127,7 +173,7 @@ const HomeScreen = ({ navigation }) => {
                   style={styles.dropdownItem}
                   onPress={() => {
                     setCurrentFilter(item.value);
-                    setOpen(false); // Close dropdown after selection
+                    setOpen(false);
                   }}
                 >
                   <Text style={styles.dropdownTextStyle}>{item.label}</Text>
@@ -137,25 +183,31 @@ const HomeScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Post List */}
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#fff" style={styles.loader} />
+        {isLoading && posts.length === 0 ? (
+          <View style={styles.loadingFooter}>
+            <ActivityIndicator size="large" color="#fff" />
+          </View>
         ) : (
           <FlatList
-            style={styles.postContainer}
-            data={getFilteredPosts()}
-            renderItem={({ item }) => <Post item={item} currentPostPlaying={currentPostPlaying} />}
-            keyExtractor={(item) => item.id}
-            pagingEnabled
-            showsVerticalScrollIndicator={false}
-            ref={flatListRef}
-            snapToAlignment="start"
-            decelerationRate="fast"
-            contentContainerStyle={{ paddingBottom: 80 }}
-            ListEmptyComponent={<Text style={styles.emptyText}>No posts available</Text>}
-            onViewableItemsChanged={onViewableItemsChanged.current}
-            viewabilityConfig={viewabilityConfig}
-          />
+  ref={flatListRef}
+  data={getFilteredPosts()}
+  renderItem={({ item, index }) => (
+    <Post item={item} isPlaying={index === currentIndex} />
+  )}
+  keyExtractor={(item) => item.id}
+  onEndReached={onEndReachedHandler}
+  onEndReachedThreshold={0.5}
+  pagingEnabled 
+  initialNumToRender={5}  
+  maxToRenderPerBatch={5}  
+  removeClippedSubviews={true}  
+  windowSize={1}  
+  onViewableItemsChanged={onViewableItemsChanged}
+  viewabilityConfig={viewabilityConfig}
+/>
+
+        
+
         )}
       </View>
     </SafeAreaView>

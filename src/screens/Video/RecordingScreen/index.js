@@ -10,6 +10,8 @@ import CancelIcon from '../../../../assets/icons/CancelIcon';
 import SwapIcon from '../../../../assets/icons/SwapIcon';
 import styles from './styles';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+
 
 
 const RecordingScreen = () => {
@@ -77,30 +79,54 @@ const RecordingScreen = () => {
       return;
     }
   
-    // Check if recording is already in progress
     if (isRecording) {
-      // If recording is in progress, stop it immediately
       cameraRef.current.stopRecording();
-      setIsRecording(false);
-      console.log('Recording stopped');
-      return; // Exit to prevent starting a new recording
+      return;
     }
   
     try {
       setIsRecording(true);
-      const options = { maxDuration: 60, quality: '1080p' };
+      const options = { maxDuration: 10, quality: '480p' };
       const recordedVideo = await cameraRef.current.recordAsync(options);
-      setVideo(recordedVideo);
-      setIsRecording(false);
-      navigation.navigate('VideoStack', {
-        screen: 'Confirmation',
-        params: { videoUri: recordedVideo.uri }
+  
+      console.log('Video recorded:', recordedVideo.uri);
+      Alert.alert('Uploading', 'Uploading video to Cloudinary...');
+  
+      // Prepare the video for Cloudinary upload
+      const formData = new FormData();
+      formData.append('file', {
+        uri: recordedVideo.uri,
+        type: 'video/mp4',
+        name: 'video.mp4',
       });
-          } catch (error) {
-      console.log('Recording error: ', error);
+      formData.append('upload_preset', 'Default');
+  
+      const response = await axios.post(
+        'https://api.cloudinary.com/v1_1/dibmnb2rp/video/upload',
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+  
+      console.log('Cloudinary Response:', response.data);
+  
+      if (response.data.secure_url) {
+        Alert.alert('Success', 'Video uploaded successfully!');
+        setVideo(recordedVideo);
+        navigation.navigate('VideoStack', {
+          screen: 'Confirmation',
+          params: { videoUri: response.data.secure_url },
+        });
+      } else {
+        Alert.alert('Upload Failed', 'Failed to upload video to Cloudinary.');
+      }
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      Alert.alert('Error', 'Failed to record or upload the video.');
+    } finally {
       setIsRecording(false);
     }
   };
+  
   
   
   const stopRecording = () => {
@@ -143,28 +169,7 @@ const RecordingScreen = () => {
     );
   }
 
-  if (video) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Video
-          style={styles.video}
-          source={{ uri: video.uri }}
-          useNativeControls
-          resizeMode="contain"
-          isLooping
-        />
-        <View style={styles.controls}>
-          <TouchableOpacity onPress={saveVideo} style={styles.controlButton}>
-            <DownloadIcon />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setVideo(null)} style={styles.controlButton}>
-            <CancelIcon />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
+ 
   return (
     <CameraView
       style={styles.container}

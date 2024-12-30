@@ -3,16 +3,12 @@
     "name": "ourzone",
     "slug": "ourzone",
     "version": "1.0.0",
-    "permissions": [
-      "CAMERA",
-      "WRITE_EXTERNAL_STORAGE",
-      "RECORD_AUDIO"
-    ],
     "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "ourzone",
     "userInterfaceStyle": "light",
+   
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -30,11 +26,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "CAMERA",
-        "WRITE_EXTERNAL_STORAGE",
-        "RECORD_AUDIO"
-      ]
+      "package": "com.tahomee.ourzone"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -53,7 +45,14 @@
         {
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
         }
-      ]
-    ]
+      ],
+      "expo-font",
+      "expo-video"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "af947272-3367-469e-9955-7920d5cd64b9"
+      }
+    }
   }
 }
