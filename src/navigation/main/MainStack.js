@@ -6,7 +6,7 @@ import ChangeInfoStack from '../stacks/ChangeInfoStack';
 import ProfileStack from '../stacks/ProfileStack';
 import VideoStack from '../stacks/VideoStack';
 import ConfirmStack from '../stacks/ConfirmStack';
-
+import ChatStack from '../stacks/ChatStack';
 const Stack = createStackNavigator();
 
 const MainStack = () => {
@@ -21,6 +21,8 @@ const MainStack = () => {
       <Stack.Screen name="ProfileStack" component={ProfileStack} />
       <Stack.Screen name="VideoStack" component={VideoStack} />
       <Stack.Screen name="ConfirmStack" component={ConfirmStack} />
+      <Stack.Screen name="ChatStack" component={ChatStack} />
+
     </Stack.Navigator>
   );
 };

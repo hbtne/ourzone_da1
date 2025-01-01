@@ -4,6 +4,7 @@ import { SvgXml } from 'react-native-svg';
 import ava from '../../assets/images/avatarcircle.png';
 import searchIcon from '../../assets/icons/search-icon';
 import moreIcon from'../../assets/icons/more-icon';
+import { useNavigation } from '@react-navigation/native'; // Import navigation hook
 
 import { db, auth } from '../../firebase/firebase';
 import { collection, getDocs, updateDoc, doc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
@@ -14,6 +15,7 @@ const FollowerScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -97,6 +99,9 @@ const FollowerScreen = () => {
     const updatedResults = searchResults.filter((_, i) => i !== index);
     setSearchResults(updatedResults);
   };
+  const openUserProfile = (user) => {
+    navigation.navigate('OthersProfile', { userId: user.id }); // Navigate with user ID
+  };
 
   const handleRemoveUser = () => {
     setSearchResults((prevResults) =>
@@ -106,7 +111,7 @@ const FollowerScreen = () => {
   };
 
   const renderItem = ({ item, index }) => (
-    <View style={styles.resultItem}>
+    <TouchableOpacity style={styles.resultItem} onPress={() => openUserProfile(item)}>
       <Image source={item.avatar ? { uri: item.avatar } : ava} style={styles.avatar} />
       <Text style={styles.resultName}>{item.name}</Text>
       <TouchableOpacity
@@ -118,7 +123,7 @@ const FollowerScreen = () => {
       <TouchableOpacity onPress={() => openMenu(item)}>
               <SvgXml style={styles.menuButton} xml={moreIcon}/>
             </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
 

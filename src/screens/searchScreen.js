@@ -5,11 +5,13 @@ import ava from '../../assets/images/avatarcircle.png';
 import searchIcon from '../../assets/icons/search-icon';
 import { db, auth } from '../../firebase/firebase';
 import { collection, getDocs, updateDoc, doc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native'; // Import navigation hook
 
 const SearchScreen = () => {
   const [allResults, setAllResults] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -28,7 +30,9 @@ const SearchScreen = () => {
     };
     fetchUsers();
   }, []);
-
+  const openUserProfile = (user) => {
+    navigation.navigate('ProfileStack',{ screen: 'OthersProfile', params: { userId: user.id }}); // Navigate with user ID
+  };
   const handleSearchChange = (text) => {
     setSearchTerm(text);
     const filteredResults = allResults.filter((result) =>
@@ -41,7 +45,7 @@ const SearchScreen = () => {
     const updatedResults = [...searchResults];
     updatedResults[index].isFollowed = !updatedResults[index].isFollowed;
     setSearchResults(updatedResults);
-
+   
     const currentUser = auth.currentUser;
     if (currentUser) {
       try {
@@ -80,7 +84,7 @@ const SearchScreen = () => {
   };
 
   const renderItem = ({ item, index }) => (
-    <View style={styles.resultItem}>
+    <TouchableOpacity style={styles.resultItem} onPress={() => openUserProfile(item)}>
       <Image source={item.avatar ? { uri: item.avatar } : ava} style={styles.avatar} />
       <Text style={styles.resultName}>{item.name}</Text>
       <TouchableOpacity
@@ -89,7 +93,7 @@ const SearchScreen = () => {
       >
         <Text style={styles.text}>{item.isFollowed ? 'Followed' : 'Follow'}</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
 

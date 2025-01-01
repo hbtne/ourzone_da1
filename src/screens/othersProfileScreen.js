@@ -1,61 +1,121 @@
-import React ,  { useState }from 'react';
-import { View, Image, StyleSheet, SafeAreaView, TouchableOpacity, Text, ScrollView, Modal, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Image,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Text,
+  Modal,
+} from 'react-native';
 import { SvgXml } from 'react-native-svg';
+import { doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../../firebase/firebase';
+
 import ava from '../../assets/images/avatarcircle.png';
 import nextIcon from '../../assets/icons/next-icon.js';
 import chatIcon from '../../assets/icons/chat-icon.js';
-import backIcon from '../../assets/icons/back-icon.js'
-const othersProfileScreen=(nagivation)=>{
-    const [isFollowed, setIsFollowed] = useState(false);
+import backIcon from '../../assets/icons/back-icon.js';
 
-    const toggleFollow = () => {
-      setIsFollowed(!isFollowed);
+const OthersProfileScreen = ({ route, navigation }) => {
+  const { userId } = route.params; // Get user ID from navigation parameters
+  const [userData, setUserData] = useState(null);
+  const [isFollowed, setIsFollowed] = useState(false);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userDocRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setUserData(data);
+          setIsFollowed(data.followersList?.includes(auth.currentUser.uid) || false); // Check if the current user follows them
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
     };
-  
-    return(
-        <SafeAreaView style={styles.container}>
-          <View>
-              <TouchableOpacity style={styles.backContainer}>
-              <SvgXml style={styles.iconBack} xml={backIcon}/>            
-            </TouchableOpacity>
-            <Text style={styles.nameAcc}>Thm</Text>
-            <TouchableOpacity style ={styles.chat}>
-            <SvgXml style={styles.iconBack} xml ={chatIcon}/>
-            </TouchableOpacity>
-            </View>
-             <View style={styles.avatarContainer}>
-             <Image source={ava} style={styles.avatar} />
-             <Text style={styles.username}>Thm</Text>
-             <View style={styles.followContainer}>
-                  <Text style={styles.followText}>8</Text>
-                  <View style={styles.space}></View>
-                  <Text style={styles.followText}>800</Text>
-                </View>
-                <View style={styles.followContainer2}>
-                  <Text style={styles.followText}>Following</Text>
-                  <View style={styles.space2}></View>
-                  <Text style={styles.followText}>Followers</Text>
-                </View>
-             </View>
-             <TouchableOpacity
+
+    fetchUserData();
+  }, [userId]);
+
+  const toggleFollow = async () => {
+    setIsFollowed(!isFollowed);
+  };
+
+  if (!userData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading user data...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View>
+        <TouchableOpacity
+          style={styles.backContainer}
+          onPress={() => navigation.goBack()}
+        >
+          <SvgXml style={styles.iconBack} xml={backIcon} />
+        </TouchableOpacity>
+        <Text style={styles.nameAcc}>{userData.name}</Text>
+        <TouchableOpacity
+  style={styles.chat}
+  onPress={() =>
+    navigation.navigate('ChatStack', {
+      screen: 'ChatScreen',
+      params: {
+        userId: auth.currentUser.uid,
+        receiverId: userId,
+        receiverName: userData.name,
+        receiverAvatar: userData.avatar || null,
+      },
+    })
+  }
+>
+          <SvgXml style={styles.iconBack} xml={chatIcon} />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.avatarContainer}>
+        <Image
+          source={userData.avatar ? { uri: userData.avatar } : ava}
+          style={styles.avatar}
+        />
+        <Text style={styles.username}>{userData.name}</Text>
+        <View style={styles.followContainer}>
+          <Text style={styles.followText}>{userData.following || 0}</Text>
+          <View style={styles.space}></View>
+          <Text style={styles.followText}>{userData.follower || 0}</Text>
+        </View>
+        <View style={styles.followContainer2}>
+          <Text style={styles.followText}>Following</Text>
+          <View style={styles.space2}></View>
+          <Text style={styles.followText}>Followers</Text>
+        </View>
+      </View>
+      <TouchableOpacity
         style={[styles.button, isFollowed ? styles.followed : styles.follow]}
-        onPress={toggleFollow}>
-        <Text style={styles.text}>{isFollowed ? 'Followed' : '  Follow'}</Text>
+        onPress={toggleFollow}
+      >
+        <Text style={styles.text}>{isFollowed ? 'Followed' : 'Follow'}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.option}>
-      <Text style={styles.optionText}>Check out their posts</Text>
-      <SvgXml style={styles.iconNext} xml={nextIcon}/>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.option}>
-      <Text style={styles.optionText}>Copy link to this profile</Text>
-      <SvgXml style={styles.iconNext} xml={nextIcon}/>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.option}>
-      <Text style={styles.optionText}>Report a problem</Text>
-      <SvgXml style={styles.iconNext} xml={nextIcon}/>
-    </TouchableOpacity>
-        </SafeAreaView>
-    )
+        <Text style={styles.optionText}>Check out their posts</Text>
+        <SvgXml style={styles.iconNext} xml={nextIcon} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.option}>
+        <Text style={styles.optionText}>Copy link to this profile</Text>
+        <SvgXml style={styles.iconNext} xml={nextIcon} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.option}>
+        <Text style={styles.optionText}>Report a problem</Text>
+        <SvgXml style={styles.iconNext} xml={nextIcon} />
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
 };
 
 const styles=StyleSheet.create({
@@ -186,4 +246,4 @@ fontSize:24,
       },
 });
 
-export default othersProfileScreen;
+export default OthersProfileScreen;
